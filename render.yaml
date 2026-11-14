@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: avkas
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MAIL_PROVIDER
+        value: ses
+      - key: SES_REGION
+        value: ap-south-1
+      - key: SES_FROM_EMAIL
+        sync: false
+      - key: SES_TO_EMAIL
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
