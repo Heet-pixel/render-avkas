@@ -184,10 +184,30 @@ app.post("/api/career", originGuard, formLimiter, upload.single("resume"), async
   }
 });
 
-/* ---------------- 404 + error handling (no internals leaked) ---------------- */
+/* ---------------- unknown pages: visitors never see a "Page not found" screen ---------------- */
+// Old / guessed URLs (Google results, bookmarks, typos, trailing slashes, /index, /home, /contact ...) are sent to the right page,
+// and anything else that is a normal page request goes to the home page.
+const ALIASES = {
+  "/home": "/", "/index": "/", "/index.html": "/", "/default": "/", "/main": "/",
+  "/about-us": "/about.html", "/aboutus": "/about.html", "/about-us.html": "/about.html",
+  "/contact": "/reach-us.html", "/contact-us": "/reach-us.html", "/contactus": "/reach-us.html", "/reach-us": "/reach-us.html", "/contact.html": "/reach-us.html",
+  "/service": "/services.html", "/our-services": "/services.html",
+  "/career": "/careers.html", "/jobs": "/careers.html",
+  "/event": "/events.html", "/news": "/blog.html", "/blogs": "/blog.html",
+  "/team": "/team-of-experts.html", "/partners": "/about-partners.html", "/managing-partners": "/about-partners.html",
+};
 app.use((req, res) => {
   if (req.path.startsWith("/api/") || req.method !== "GET") return res.status(404).json({ status: "error", error: "Not found." });
-  res.status(404).sendFile(path.join(PUBLIC_DIR, "404.html"));
+  const key = req.path.toLowerCase().replace(/\/+$/, "") || "/";
+  if (ALIASES[key]) return res.redirect(301, ALIASES[key]);
+  // same page with different letter case or a trailing slash (/About, /services/)
+  if (key !== req.path && /^\/[a-z0-9-]+(\.html)?$/.test(key)) {
+    const file = path.join(PUBLIC_DIR, key.endsWith(".html") ? key : key + ".html");
+    if (require("fs").existsSync(file)) return res.redirect(301, key);
+  }
+  // missing images / scripts / styles must stay a real 404 (a redirect to HTML would break the page); everything else -> home
+  if (/\.(?:jpe?g|png|gif|webp|svg|ico|css|js|map|json|xml|txt|mp4|woff2?|pdf)$/i.test(req.path)) return res.status(404).end();
+  return res.redirect(302, "/");
 });
 
 // eslint-disable-next-line no-unused-vars

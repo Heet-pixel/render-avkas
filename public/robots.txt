@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://avkas.onrender.com/sitemap.xml
+Sitemap: https://avkasco.com/sitemap.xml
