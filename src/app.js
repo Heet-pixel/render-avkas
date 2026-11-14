@@ -138,7 +138,7 @@ const upload = multer({
 
 const notConfigured = (res) => {
   console.error("[config] Email refused because these environment variables are missing on the server:", cfg.missing.join(", "), "| provider:", cfg.provider);
-  return res.status(503).json({ status: "error", error: "The email service is not available right now. Please call us or try again later." });
+  return res.status(503).json({ status: "error", error: "Your message could not be sent. Please contact us on +91 84019 89798." });
 };
 
 /* ---------------- POST /api/contact ---------------- */
@@ -203,7 +203,7 @@ app.use((err, req, res, next) => {
   console.error("[error]", err && err.name, err && err.message);
   const hint = explain(err);
   if (hint) console.error("[hint ]", hint);
-  res.status(500).json({ status: "error", error: "We could not send your message right now. Please try again." });
+  res.status(500).json({ status: "error", error: "Your message could not be sent. Please contact us on +91 84019 89798." });
 });
 
 module.exports = app;

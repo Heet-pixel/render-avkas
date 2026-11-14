@@ -27,7 +27,18 @@
       var p = document.createElement("p");
       p.className = kind;
       p.setAttribute("role", kind === "bad" ? "alert" : "status");
-      p.textContent = text;
+      var tel = "+91 84019 89798";
+      var i = kind === "bad" ? text.indexOf(tel) : -1;
+      if (i !== -1) {
+        p.appendChild(document.createTextNode(text.slice(0, i)));
+        var a = document.createElement("a");
+        a.href = "tel:+918401989798";
+        a.textContent = tel;
+        a.style.color = "inherit";
+        a.style.fontWeight = "700";
+        p.appendChild(a);
+        p.appendChild(document.createTextNode(text.slice(i + tel.length)));
+      } else p.textContent = text;
       box.appendChild(p);
       if (kind === "ok" || kind === "bad") { try { p.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {} }
     }
@@ -86,13 +97,8 @@
       button.textContent = "Submitting...";
       show(null);
       api.wakeBackend(true); // make sure it is waking while we send
-      slowTimer = setTimeout(function () {
-        show("note", "Connecting to our server. This can take up to a minute if it was idle. Please keep this page open.");
-      }, 8000);
 
-      var result = await api.postForm(endpoint, fd, function (n, max) {
-        show("note", "Our server is waking up. Retrying automatically (attempt " + n + " of " + max + ")…");
-      });
+      var result = await api.postForm(endpoint, fd);
 
       clearTimeout(slowTimer);
       busy = false;

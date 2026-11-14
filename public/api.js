@@ -53,7 +53,7 @@
   var MAX_ATTEMPTS = 3;            // attempt 1 -> wait -> attempt 2 -> wait -> attempt 3
   var ATTEMPT_TIMEOUT_MS = 45000;  // a cold Render start can take ~50 s
   var BACKOFF_BASE_MS = 2000;      // 2 s, then 4 s
-  var GENERIC = "We could not send your message right now. Please try again, or call us on +91 84019 89798.";
+  var GENERIC = "Your message could not be sent. Please contact us on +91 84019 89798.";
   var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
 
   async function postForm(url, body, onRetry) {
@@ -79,18 +79,19 @@
         if (res.ok && data && data.status === "sent") return { ok: true };
 
         // definite answers – retrying cannot help
-        if (res.status === 429) return { ok: false, error: (data && data.error) || "Too many requests. Please try again in a few minutes." };
-        if ([400, 403, 413, 415, 422].indexOf(res.status) !== -1) return { ok: false, error: (data && data.error) || GENERIC };
+        if (res.status === 429) return { ok: false, error: GENERIC };
+        if (res.status === 400 || res.status === 422) return { ok: false, error: (data && data.error) || GENERIC }; // validation text
+        if ([403, 413, 415].indexOf(res.status) !== -1) return { ok: false, error: GENERIC };
 
         // 5xx, Render's HTML "spinning up" page, anything unexpected -> retry
-        lastError = (data && data.error) || GENERIC;
+        lastError = GENERIC; // never show server internals / "waking up" texts
       } catch (e) {
         // network error, CORS-less spin-up response, or our own timeout -> retry
         if (timer) clearTimeout(timer);
-        lastError = "We could not reach our server. Please check your connection and try again.";
+        lastError = GENERIC;
       }
       if (attempt < MAX_ATTEMPTS) {
-        if (onRetry) onRetry(attempt + 1, MAX_ATTEMPTS);
+        // retries are silent: the visitor only ever sees the final result
         await sleep(BACKOFF_BASE_MS * Math.pow(2, attempt - 1) + Math.random() * 400);
       }
     }

@@ -20,6 +20,8 @@ const server = app.listen(cfg.port, "0.0.0.0", () => {
   console.log(`  Health check          :  http://localhost:${cfg.port}/api/health`);
   console.log("");
   console.log(`  Mail region           :  ${cfg.aws.region}   From: ${cfg.ses.from || "(not set)"}   To: ${cfg.ses.to.join(", ") || "(not set)"}`);
+  if (/@(gmail|googlemail|yahoo|outlook|hotmail|live|icloud)\./i.test(cfg.ses.from) && cfg.provider === "ses")
+    console.warn(`WARNING – SES_FROM_EMAIL (${cfg.ses.from}) is a free mailbox. SES accepts the mail but Gmail/Yahoo silently drop or spam it (DMARC). Verify your own domain in SES and use e.g. no-reply@yourdomain.`);
   if (cfg.missing.length) console.warn(`WARNING – missing settings in .env, form emails will be refused: ${cfg.missing.join(", ")}`);
 });
 
